@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My-Lorcana-TCG</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='Lorcana Favicon.png') }}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .card-img { transition: transform 0.25s ease; }
+    .card-img:hover { transform: scale(1.05); }
+    .card { min-height: 460px; }
+    .card-img { height: 260px; object-fit: contain; }
+  </style>
+</head>
+
+<body 
+  class="text-slate-200 min-h-screen"
+  style="
+    background: #020024;
+    background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(65,9,121,1) 22%, rgba(62,19,128,1) 46%, rgba(30,119,194,1) 100%, rgba(0,212,255,1) 100%);
+  "
+>
+
+  <!-- FIXED HEADER -->
+  <header class="sticky top-0 z-50 px-8 pt-0 pb-2 border-b border-slate-700 bg-[#10162b]">
+    <div class="flex items-center justify-between">
+
+      <a href="/" class="flex items-center gap-4 hover:scale-105 transition">
+        <img 
+          src="{{ url_for('static', filename='Lorcana Favicon.png') }}" 
+          alt="Lorcana Emblem" 
+          class="w-40 h-32 object-contain"
+        >
+        <h1 class="text-5xl font-bold tracking-wide text-indigo-400">
+          My Lorcana Binder
+        </h1>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-6 text-slate-300 text-4xl font-semibold">
+        <a href="/" class="hover:text-indigo-400 transition">Home</a>
+        <a href="/add" class="hover:text-indigo-400 transition">Add Card</a>
+        <a href="/upload" class="hover:text-indigo-400 transition">Upload CSV</a>
+        <a href="/remove" class="hover:text-indigo-400 transition">Remove</a>
+      </nav>
+
+    </div>
+  </header>
+
+  <!-- FIXED SPACING -->
+  <main class="max-w-[1700px] mx-auto px-6 pt-12">
+
+    <form method="get" class="mb-8 grid grid-cols-1 md:grid-cols-5 gap-4" autocomplete="off">
+      <input 
+        type="text" 
+        name="name" 
+        placeholder="Search by name..." 
+        class="p-3 rounded-lg bg-slate-800 border border-slate-600 text-slate-200"
+        autocomplete="off"
+        spellcheck="false"
+        autocorrect="off"
+        list="no-suggest"
+      >
+      <input 
+        type="text" 
+        name="set" 
+        placeholder="Set number..." 
+        class="p-3 rounded-lg bg-slate-800 border border-slate-600 text-slate-200"
+        autocomplete="off"
+        spellcheck="false"
+        autocorrect="off"
+        list="no-suggest"
+      >
+      <datalist id="no-suggest"></datalist>
+
+      <label class="flex items-center gap-2 text-slate-200">
+        <input type="checkbox" name="wishlist" class="accent-indigo-500"> Wishlist only
+      </label>
+      <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 transition text-white p-3 rounded-lg">Apply Preferences</button>
+      <a href="/" class="bg-slate-600 hover:bg-slate-500 transition text-center text-white p-3 rounded-lg">Reset Preferences</a>
+    </form>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      {% for card in cards %}
+      <div class="bg-slate-800 border border-slate-700 rounded-xl shadow-lg overflow-hidden p-4 flex flex-col card">
+        <div class="w-full mb-4">
+          <img 
+            src="{{ card.image_url or url_for('static', filename='Lorcana Favicon.png') }}" 
+            alt="{{ card.name }}" 
+            class="card-img w-full rounded-lg bg-slate-700"
+            loading="lazy"
+          >
+        </div>
+        <h3 class="text-lg font-semibold text-indigo-300 mb-1">{{ card.name }}</h3>
+        <p class="text-sm text-slate-300 mb-3">Set: {{ card.set }}</p>
+        <div class="space-y-1 text-sm mb-4">
+          <p><span class="font-medium">Quantity:</span> {{ card.quantity }}</p>
+          <p><span class="font-medium">Your Price:</span> £{{ "%.2f"|format(card.my_price_gbp) }}</p>
+          <p><span class="font-medium">Cardmarket (EUR):</span> €{{ "%.2f"|format(card.cardmarket_price_eur) }}</p>
+          <p><span class="font-medium">Cardmarket (GBP):</span> £{{ "%.2f"|format(card.cardmarket_price_gbp) }}</p>
+        </div>
+        <div class="mt-auto flex gap-2">
+          <form action="/wishlist/{{ card.id }}" method="post">
+            <button class="px-2 py-1.5 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-xs">
+              {% if card.wishlist %}★{% else %}☆{% endif %}
+            </button>
+          </form>
+          <a href="/edit/{{ card.id }}" class="px-2 py-1.5 rounded bg-slate-600 hover:bg-slate-500 text-white text-xs">Edit</a>
+          <form action="/delete/{{ card.id }}" method="post">
+            <button class="px-2 py-1.5 rounded bg-red-600 hover:bg-red-700 text-white text-xs">Del</button>
+          </form>
+        </div>
+      </div>
+      {% else %}
+      <div class="col-span-full text-center py-12 text-slate-300">
+        No cards added yet. Click "Add a New Card" to start your collection.
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="text-center mt-12">
+      <a href="/add" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg text-lg">Add a New Card</a>
+      <a href="/upload" class="ml-4 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg text-lg">Upload CSV</a>
+      <a href="/remove" class="ml-4 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg text-lg">Remove Cards</a>
+    </div>
+
+  </main>
+</body>
+</html>
